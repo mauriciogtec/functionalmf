@@ -48,7 +48,7 @@ setup(
     license="GNU GPLv3",
     packages=['functionalmf'],
     ext_modules=extensions,
-    install_requires=['numpy', 'scipy', 'matplotlib', 'pypolyagamma', 'seaborn', 'scikit-sparse', 'SharedArray'],
+    install_requires=['numpy', 'scipy', 'matplotlib', 'seaborn', 'scikit-sparse', 'SharedArray'],
     classifiers=[
         'Intended Audience :: Science/Research',
         'Programming Language :: Python'
