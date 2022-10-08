@@ -17,8 +17,12 @@ from functionalmf.elliptical_slice import elliptical_slice, elliptical_slice_
 from functionalmf.gass import gass
 from concurrent import futures
 from multiprocessing import Pool
-import SharedArray as sa
+import warning
 
+try:
+  import SharedArray as sa
+except:
+  warning.warn("SharedArray not detect, multiprocessing functionality not available")
 
 class BayesianTensorFiltering(_BayesianModel):
     def __init__(self, nrows, ncols, ndepth,
