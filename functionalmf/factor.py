@@ -37,7 +37,6 @@ class BayesianTensorFiltering(_BayesianModel):
                        W_init=None, V_init=None,
                        W_true=None, V_true=None,
                        stability=1e-6, 
-                       force_psd=False, 
                        force_psd_eps=1e-6,
                        force_psd_attempts=4,
                        **kwargs):
@@ -48,7 +47,6 @@ class BayesianTensorFiltering(_BayesianModel):
         self.nembeds = nembeds
         self.stability = stability
         self.linalg_opts = dict(
-            force_psd=force_psd,
             force_psd_eps=force_psd_eps,
             force_psd_attempts=force_psd_attempts
         )

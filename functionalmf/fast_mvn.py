@@ -16,8 +16,6 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
         - sparse: If true, assumes we are working with a sparse Q
         - chol_factor: If true, assumes Q is a (lower triangular) Cholesky
                         decomposition of the precision matrix
-        - force_psd (bool): If true, attempts to force the precision matrix to
-                            be positive definite adding a diagonal term.
         - force_psd_eps (float): If force_psd is true, force_psd_eps is the frist value added to the diagonal
                             to force the precision matrix to be positive definite.
         - force_psd_attempts (int): If force_psd is true, this is the number of attempts to force
@@ -29,7 +27,6 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
 
     attempt = 0
     eps = force_psd_eps
-    force_psd = (force_psd_attempts > 0)
 
     while True:
         try:
@@ -62,20 +59,20 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
                 elif mu is not None:
                     result += mu
         except (CholmodNotPositiveDefiniteError, LinAlgError):
-            if force_psd and attempt < force_psd_attempts:
+            if attempt < force_psd_attempts:
                 Q = Q.copy()
                 Q[np.diag_indices_from(Q)] += eps
                 warn(f"Cholesky factorization failed, adding shrinkage {eps}.")
                 eps *= 10
             else:
-                warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
+                warn(f'Cholesky factorization failed, try increasing force_psd_attempts')
                 raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
         else:
             return result
 
 
 def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_factor=False,
-                               force_psd=False, force_psd_eps=1e-6, force_psd_attempts=4):
+                               force_psd_eps=1e-6, force_psd_attempts=4):
     '''Fast sampling from a multivariate normal with covariance parameterization.
     Supports sparse arrays. Params:
         - mu: If provided, assumes the model is N(mu, Q)
@@ -83,8 +80,6 @@ def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_facto
         - sparse: If true, assumes we are working with a sparse Q
         - chol_factor: If true, assumes Q is a (lower triangular) Cholesky
                         decomposition of the covariance matrix
-        - force_psd (bool): If true, attempts to force the covariance- matrix to
-                            be positive definite adding a diagonal term
         - force_psd_eps (float): If force_psd is true, force_psd_eps is the frist value added to the diagonal
                             to force the covariance matrix to be positive definite.l
         - force_psd_attempts (int): If force_psd is true, this is the number of attempts to force
@@ -129,15 +124,14 @@ def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_facto
                 elif mu is not None:
                     result += mu
         except (CholmodNotPositiveDefiniteError, LinAlgError):
-            if force_psd and attempt < force_psd_attempts:
+            if attempt < force_psd_attempts:
                 Q = Q.copy()
                 Q[np.diag_indices_from(Q)] += eps
                 warn(f"Cholesky factorization failed, adding shrinkage {eps}.")
                 eps *= 10
             else:
-                warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
-                if attempt > force_psd_attempts:
-                    raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
+                warn(f'Cholesky factorization failed, try setting increasing force_psd_attempts')
+                raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
         else:
             return result
 
@@ -248,7 +242,7 @@ if __name__ == '__main__':
 
     # Non invertible case Covariance
     Q = np.array([[1,1.0],[1.0,1]])
-    X = np.array([sample_mvn(Q, sparse=False, chol_factor=False, precision=False, force_psd=True, force_psd_eps=0.1) for _ in range(1000)])
+    X = np.array([sample_mvn(Q, sparse=False, chol_factor=False, precision=False, force_psd_eps=0.1) for _ in range(1000)])
     axarr[2,2].scatter(X[:,0], X[:,1])
     axarr[2,2].set_title('Non invertible, dense covariance')
     axarr[2,2].set_xlim(xlim)
@@ -256,7 +250,7 @@ if __name__ == '__main__':
 
     # Non invertible case Precision
     sp_Q = csc_matrix(Q)
-    X = np.array([sample_mvn(sp_Q, sparse=True, chol_factor=False, precision=True, force_psd=True, force_psd_eps=0.1) for _ in range(1000)])
+    X = np.array([sample_mvn(sp_Q, sparse=True, chol_factor=False, precision=True, force_psd_eps=0.1) for _ in range(1000)])
     axarr[2,3].scatter(X[:,0], X[:,1])
     axarr[2,3].set_title('Non invertible, sparse precision')
     axarr[2,3].set_xlim(xlim)
