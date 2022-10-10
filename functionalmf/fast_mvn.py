@@ -8,7 +8,7 @@ from numpy.linalg import LinAlgError
 
 
 def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor=False, Q_shape=None,
-                              force_psd=False, force_psd_eps=1e-6, force_psd_attempts=4):
+                              force_psd_eps=1e-6, force_psd_attempts=4):
     '''Fast sampling from a multivariate normal with precision parameterization.
     Supports sparse arrays. Params:
         - mu: If provided, assumes the model is N(mu, Q^-1)
@@ -29,9 +29,11 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
 
     attempt = 0
     eps = force_psd_eps
+    force_psd = (force_psd_attempts > 0)
 
     while True:
         try:
+            attempt += 1
             if sparse:
                 # Cholesky factor LL' = PQP' of the prior precision Q
                 # where P is the permuation that reorders Q, the ordering of resulting L follows P
@@ -64,12 +66,10 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
                 Q = Q.copy()
                 Q[np.diag_indices_from(Q)] += eps
                 warn(f"Cholesky factorization failed, adding shrinkage {eps}.")
-                attempt += 1
                 eps *= 10
             else:
                 warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
-                if attempt > force_psd_attempts:
-                    raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
+                raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
         else:
             return result
 
