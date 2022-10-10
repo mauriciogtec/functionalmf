@@ -69,7 +69,7 @@ def sample_mvn_from_precision(Q, mu=None, mu_part=None, sparse=True, chol_factor
             else:
                 warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
                 if attempt > force_psd_attempts:
-                    raise Exception("Max attempts reached. Could not force matrix to be positive definite.")
+                    raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
         else:
             return result
 
@@ -137,7 +137,7 @@ def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_facto
             else:
                 warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
                 if attempt > force_psd_attempts:
-                    raise Exception("Max attempts reached. Could not force matrix to be positive definite.")
+                    raise LinAlgError("Max attempts reached. Could not force matrix to be positive definite.")
         else:
             return result
 

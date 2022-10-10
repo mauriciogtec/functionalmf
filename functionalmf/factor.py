@@ -18,11 +18,14 @@ from functionalmf.gass import gass
 from concurrent import futures
 from multiprocessing import Pool
 import warnings
+from numpy.linalg import LinAlgError
+
 
 try:
   import SharedArray as sa
 except:
   warnings.warn("SharedArray not detect, multiprocessing functionality not available")
+
 
 class BayesianTensorFiltering(_BayesianModel):
     def __init__(self, nrows, ncols, ndepth,
@@ -115,21 +118,34 @@ class BayesianTensorFiltering(_BayesianModel):
 
     def resample(self, data, **kwargs):
         # Sample the row-wise embedding variance
-        if self.sample_sigma2:
-            self._resample_sigma2()
+        max_attempts = 10
+        attempt = 0
+        try:
+            if self.sample_sigma2:
+                self._resample_sigma2()
 
-        # Update the local shrinkage variables
-        if self.sample_Tau2:
-            self._resample_Tau2()
+            # Update the local shrinkage variables
+            if self.sample_Tau2:
+                self._resample_Tau2()
 
-        if self.sample_lam2:
-            self._resample_lam2()
-            
-        if self.sample_W:
-            self._resample_W(data)
+            if self.sample_lam2:
+                self._resample_lam2()
+                
+            if self.sample_W:
+                self._resample_W(data)
 
-        if self.sample_V:
-            self._resample_V(data)
+            if self.sample_V:
+                self._resample_V(data)
+        except:
+            attempt += 1
+            if attempt < max_attempts:
+                self._init_lam2()
+                self._init_sigma2()
+                self._init_V()
+                self._init_W()
+                self._init_Tau2()
+            else:
+                raise Exception("Could not resample, max attempts exceeded.")
 
     def _resample_sigma2(self):
         W_vec, _ = self._pack_W(self.W)
