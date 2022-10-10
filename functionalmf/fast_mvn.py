@@ -97,6 +97,7 @@ def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_facto
 
     while True:
         try:
+            attempt += 1
             if sparse:
                 # Cholesky factor LL' = Q of the covariance matrix Q
                 if chol_factor:
@@ -132,7 +133,6 @@ def sample_mvn_from_covariance(Q, mu=None, mu_part=None, sparse=True, chol_facto
                 Q = Q.copy()
                 Q[np.diag_indices_from(Q)] += eps
                 warn(f"Cholesky factorization failed, adding shrinkage {eps}.")
-                attempt += 1
                 eps *= 10
             else:
                 warn(f'Cholesky factorization failed, try setting force_psd=True or increasing attempts')
