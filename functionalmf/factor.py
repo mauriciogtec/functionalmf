@@ -38,7 +38,7 @@ class BayesianTensorFiltering(_BayesianModel):
                        W_true=None, V_true=None,
                        stability=1e-6, 
                        force_psd_eps=1e-6,
-                       force_psd_attempts=4,
+                       force_psd_attempts=100,
                        **kwargs):
         super().__init__(**kwargs)
         self.nrows = nrows
@@ -119,6 +119,7 @@ class BayesianTensorFiltering(_BayesianModel):
         max_attempts = 10
         attempt = 0
         try:
+            attempt += 1
             if self.sample_sigma2:
                 self._resample_sigma2()
 
@@ -135,7 +136,6 @@ class BayesianTensorFiltering(_BayesianModel):
             if self.sample_V:
                 self._resample_V(data)
         except:
-            attempt += 1
             if attempt < max_attempts:
                 self._init_lam2()
                 self._init_sigma2()
